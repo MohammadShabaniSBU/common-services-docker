@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  reverse-proxy:
+    image: traefik:v2.9
+    container_name: common-traefik
+    command: --providers.docker --api.insecure=true
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - common
+
+  database:
+    image: mysql:8
+    container_name: common-mysql
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - './mysql/data:/var/lib/mysql'
+    networks:
+      - common
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: common-mailhog
+    volumes:
+      - ./auth.txt:/home/mailhog/auth.txt
+    command: -auth-file /home/mailhog/auth.txt
+    restart: always
+    ports: 
+      - 8025:8025
+    networks:
+      - common
+
+networks:
+  common:
+    driver: bridge
+    name: common
